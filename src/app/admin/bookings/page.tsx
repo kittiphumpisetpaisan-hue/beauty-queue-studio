@@ -13,14 +13,23 @@ const STATUSES: { value: string; label: string }[] = [
   { value: 'cancelled', label: 'ยกเลิก' },
 ]
 
+const EXPORT_KEY = 'beauty2024'
+const EXPORTS = [
+  { type: 'bookings', label: 'รายการจองทั้งหมด', file: 'bookings.csv' },
+  { type: 'daily',    label: 'รายได้รายวัน',      file: 'revenue-daily.csv' },
+  { type: 'monthly',  label: 'รายได้รายเดือน',    file: 'revenue-monthly.csv' },
+  { type: 'yearly',   label: 'รายได้รายปี',       file: 'revenue-yearly.csv' },
+]
+
 export default function AdminBookingsPage() {
-  const today = new Date().toISOString().split('T')[0]
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [filterDate, setFilterDate] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
+  const [showExport, setShowExport] = useState(false)
+  const [copied, setCopied] = useState('')
 
   const fetchBookings = useCallback(async () => {
     setLoading(true)
@@ -51,11 +60,33 @@ export default function AdminBookingsPage() {
     setUpdatingId(null)
   }
 
+  function downloadCSV(type: string, filename: string) {
+    const a = document.createElement('a')
+    a.href = `/api/admin/export?key=${EXPORT_KEY}&type=${type}`
+    a.download = filename
+    a.click()
+  }
+
+  function copyFormula(type: string) {
+    const url = `https://beauty-queue.vercel.app/api/admin/export?key=${EXPORT_KEY}&type=${type}`
+    navigator.clipboard.writeText(`=IMPORTDATA("${url}")`)
+    setCopied(type)
+    setTimeout(() => setCopied(''), 2000)
+  }
+
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">จัดการคิว</h1>
-        <p className="text-gray-500 text-sm mt-1">ดูและจัดการการจองทั้งหมด</p>
+    <div className="p-4 md:p-8">
+      <div className="mb-6 flex flex-wrap gap-3 items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">จัดการคิว</h1>
+          <p className="text-gray-500 text-sm mt-1">ดูและจัดการการจองทั้งหมด</p>
+        </div>
+        <button
+          onClick={() => setShowExport(true)}
+          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"
+        >
+          ⬇ Export / Google Sheets
+        </button>
       </div>
 
       {/* Filters */}
@@ -163,6 +194,64 @@ export default function AdminBookingsPage() {
           </div>
         )}
       </div>
+
+      {/* Export Modal */}
+      {showExport && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-5">
+              <h2 className="font-bold text-gray-800 text-lg">Export ข้อมูล</h2>
+              <button onClick={() => setShowExport(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            </div>
+
+            <p className="text-sm font-semibold text-gray-700 mb-3">⬇ ดาวน์โหลด Excel / CSV</p>
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              {EXPORTS.map(e => (
+                <button
+                  key={e.type}
+                  onClick={() => downloadCSV(e.type, e.file)}
+                  className="p-3 rounded-xl border border-gray-200 hover:border-green-300 hover:bg-green-50 text-sm text-left transition-colors"
+                >
+                  📥 {e.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-100 pt-5">
+              <p className="text-sm font-semibold text-gray-700 mb-1">🔗 เชื่อม Google Sheets อัตโนมัติ</p>
+              <p className="text-xs text-gray-500 mb-3">เปิด Google Sheets → วาง formula ใน cell A1 → ข้อมูลอัปเดตอัตโนมัติทุกครั้งที่เปิด</p>
+              <div className="space-y-2">
+                {EXPORTS.map(e => {
+                  const formula = `=IMPORTDATA("https://beauty-queue.vercel.app/api/admin/export?key=${EXPORT_KEY}&type=${e.type}")`
+                  return (
+                    <div key={e.type} className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs font-medium text-gray-600 mb-1.5">{e.label}</p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs text-green-700 bg-white border border-gray-200 px-2 py-1.5 rounded flex-1 overflow-hidden block whitespace-nowrap overflow-ellipsis">
+                          {formula}
+                        </code>
+                        <button
+                          onClick={() => copyFormula(e.type)}
+                          className={`text-xs shrink-0 border rounded px-2 py-1.5 transition-colors ${
+                            copied === e.type ? 'bg-green-500 text-white border-green-500' : 'border-gray-200 text-gray-500 hover:bg-gray-100'
+                          }`}
+                        >
+                          {copied === e.type ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowExport(false)}
+              className="mt-5 w-full border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50"
+            >ปิด</button>
+          </div>
+        </div>
+      )}
 
       {/* Detail Modal */}
       {selectedBooking && (
