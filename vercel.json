@@ -1,7 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "prisma generate && next build",
-  "env": {
-    "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/beauty_queue"
-  }
+  "buildCommand": "prisma generate && prisma migrate deploy && next build"
 }
