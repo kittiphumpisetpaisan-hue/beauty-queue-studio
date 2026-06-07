@@ -7,8 +7,8 @@ export interface Service {
   durationMinutes: number
   price: number
   isActive: boolean
-  createdAt: string
-  updatedAt: string
+  createdAt: Date | string
+  updatedAt: Date | string
 }
 
 export interface Booking {
@@ -23,8 +23,8 @@ export interface Booking {
   bookingTime: string
   status: BookingStatus
   note: string | null
-  createdAt: string
-  updatedAt: string
+  createdAt: Date | string
+  updatedAt: Date | string
 }
 
 export interface ShopSetting {
@@ -35,8 +35,8 @@ export interface ShopSetting {
   openTime: string
   closeTime: string
   closedDays: string
-  createdAt: string
-  updatedAt: string
+  createdAt: Date | string
+  updatedAt: Date | string
 }
 
 export interface DashboardStats {
