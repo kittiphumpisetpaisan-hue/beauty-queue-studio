@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = env("DATABASE_PROVIDER")
+  url      = env("DATABASE_URL")
+}
+
+model Service {
+  id              Int       @id @default(autoincrement())
+  name            String
+  description     String?
+  durationMinutes Int
+  price           Float
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  bookings        Booking[]
+}
+
+model Booking {
+  id            Int      @id @default(autoincrement())
+  bookingCode   String   @unique
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  serviceId     Int
+  service       Service  @relation(fields: [serviceId], references: [id])
+  bookingDate   String
+  bookingTime   String
+  status        String   @default("pending")
+  note          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ShopSetting {
+  id          Int      @id @default(autoincrement())
+  shopName    String
+  phone       String
+  address     String?
+  openTime    String
+  closeTime   String
+  closedDays  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
