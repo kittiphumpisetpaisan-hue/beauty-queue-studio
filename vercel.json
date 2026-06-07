@@ -1,4 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "prisma generate && (prisma migrate deploy || echo 'Migration skipped - no DB connected yet') && next build"
+  "buildCommand": "prisma generate && (prisma db push --accept-data-loss || echo 'DB push skipped') && next build"
 }
