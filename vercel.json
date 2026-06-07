@@ -1,0 +1,7 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "env": {
+    "DATABASE_PROVIDER": "postgresql"
+  }
+}
